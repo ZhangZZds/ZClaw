@@ -5,24 +5,24 @@
       "id": "phase-1",
       "name": "核心基础",
       "stories": [
-        { "id": "P1-S001", "title": "项目结构重构", "status": "pending", "priority": "high" },
-        { "id": "P1-S002", "title": "Room 管理器实现", "status": "pending", "priority": "high" },
-        { "id": "P1-S003", "title": "Agent 配置系统", "status": "pending", "priority": "high" },
-        { "id": "P1-S004", "title": "LLM 提供者层", "status": "pending", "priority": "high" },
-        { "id": "P1-S005", "title": "并行模式实现", "status": "pending", "priority": "high" },
-        { "id": "P1-S006", "title": "团队模式实现", "status": "pending", "priority": "high" },
-        { "id": "P1-S007", "title": "基础工具系统", "status": "pending", "priority": "medium" },
-        { "id": "P1-S008", "title": "Web 渠道重构", "status": "pending", "priority": "high" }
+        { "id": "P1-S001", "title": "项目结构重构", "status": "done", "priority": "high" },
+        { "id": "P1-S002", "title": "Room 管理器实现", "status": "done", "priority": "high" },
+        { "id": "P1-S003", "title": "Agent 配置系统", "status": "done", "priority": "high" },
+        { "id": "P1-S004", "title": "LLM 提供者层", "status": "done", "priority": "high" },
+        { "id": "P1-S005", "title": "并行模式实现", "status": "done", "priority": "high" },
+        { "id": "P1-S006", "title": "团队模式实现", "status": "done", "priority": "high" },
+        { "id": "P1-S007", "title": "基础工具系统", "status": "done", "priority": "medium" },
+        { "id": "P1-S008", "title": "Web 渠道重构", "status": "done", "priority": "high" }
       ]
     },
     {
       "id": "phase-2",
       "name": "记忆与持久化",
       "stories": [
-        { "id": "P2-S001", "title": "短期记忆实现", "status": "pending", "priority": "high" },
-        { "id": "P2-S002", "title": "结构化长期记忆", "status": "pending", "priority": "high" },
-        { "id": "P2-S003", "title": "Pipeline 模式实现", "status": "pending", "priority": "high" },
-        { "id": "P2-S004", "title": "状态持久化", "status": "pending", "priority": "high" }
+        { "id": "P2-S001", "title": "短期记忆实现", "status": "done", "priority": "high" },
+        { "id": "P2-S002", "title": "结构化长期记忆", "status": "done", "priority": "high" },
+        { "id": "P2-S003", "title": "Pipeline 模式实现", "status": "done", "priority": "high" },
+        { "id": "P2-S004", "title": "状态持久化", "status": "done", "priority": "high" }
       ]
     },
     {
@@ -37,24 +37,12 @@
       ]
     }
   ],
-  "bugs": [
-    {
-      "id": "BUG-001",
-      "title": "Bug 标题",
-      "description": "Bug 描述",
-      "severity": "critical|high|medium|low",
-      "status": "open|in_progress|fixed|closed",
-      "relatedStory": "P1-S001",
-      "createdAt": "2025-03-26",
-      "resolvedAt": null,
-      "resolution": null
-    }
-  ],
+  "bugs": [],
   "status": {
     "totalStories": 17,
-    "completed": 0,
+    "completed": 12,
     "inProgress": 0,
-    "pending": 17,
+    "pending": 5,
     "totalBugs": 0,
     "openBugs": 0,
     "fixedBugs": 0
