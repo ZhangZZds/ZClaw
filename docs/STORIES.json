@@ -1,0 +1,721 @@
+{
+  "project": "myclaw",
+  "version": "1.0.0",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "核心基础",
+      "description": "Room + Agent实例 + Team/Parallel模式 + 基础工具",
+      "duration": "2 weeks",
+      "stories": [
+        {
+          "id": "P1-S001",
+          "title": "项目结构重构",
+          "description": "按照设计文档重构项目目录结构",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "创建核心目录结构",
+              "details": [
+                "src/core/types.ts - 核心类型定义",
+                "src/core/gateway/ - Gateway层",
+                "src/core/room/ - 房间管理",
+                "src/core/agent/ - Agent运行时",
+                "src/core/tools/ - 工具系统",
+                "src/core/llm/ - LLM层",
+                "src/channels/ - 渠道适配器",
+                "src/config/ - 配置管理",
+                "src/storage/ - 存储层"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "定义核心类型",
+              "details": [
+                "Room 接口",
+                "AgentInstance 接口",
+                "BaseAgent 接口",
+                "CollaborationMode 类型",
+                "Message 接口",
+                "Tool 接口"
+              ]
+            }
+          ],
+          "acceptance": [
+            "目录结构符合设计文档",
+            "类型定义完整且无 TypeScript 错误"
+          ]
+        },
+        {
+          "id": "P1-S002",
+          "title": "Room 管理器实现",
+          "description": "实现聊天室的创建、销毁、Agent实例管理",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "Room 基础操作",
+              "details": [
+                "createRoom(name, mode, workDir) - 创建房间",
+                "destroyRoom(roomId) - 销毁房间",
+                "getRoom(roomId) - 获取房间",
+                "listRooms() - 列出所有房间"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "Agent 实例管理",
+              "details": [
+                "addAgentToRoom(roomId, baseAgentId) - 创建实例加入房间",
+                "removeAgentFromRoom(roomId, instanceId) - 移除实例",
+                "getAgentInstance(roomId, instanceId) - 获取实例",
+                "listAgentInstances(roomId) - 列出房间内所有实例"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "上下文隔离",
+              "details": [
+                "每个 AgentInstance 有独立的 ChatContext",
+                "消息只发送给被 @ 的 Agent",
+                "Agent 之间消息不可见（除非团队模式）"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以创建/销毁房间",
+            "可以添加/移除 Agent 实例",
+            "每个实例上下文完全隔离",
+            "单元测试覆盖"
+          ]
+        },
+        {
+          "id": "P1-S003",
+          "title": "Agent 配置系统",
+          "description": "实现基于配置文件的 Agent 定义和管理",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "配置文件结构",
+              "details": [
+                "config/agents/{agent-id}/agent.json - 元信息",
+                "config/agents/{agent-id}/soul.md - 人格设定",
+                "config/agents/{agent-id}/AGENTS.md - 行为规范"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "ConfigManager 实现",
+              "details": [
+                "loadBaseAgents() - 加载所有基础 Agent",
+                "loadAgent(dir) - 加载单个 Agent 配置",
+                "createInstance(baseAgent, roomId) - 创建实例"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "预置 Agent 配置",
+              "details": [
+                "assistant - 小助手",
+                "coder - 程序员",
+                "writer - 作家",
+                "analyst - 分析师"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以从配置文件加载 Agent",
+            "每个 Agent 有独立的人格和行为规范",
+            "可以创建 Agent 实例"
+          ]
+        },
+        {
+          "id": "P1-S004",
+          "title": "LLM 提供者层",
+          "description": "实现多模型支持和动态切换",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "LLM 客户端抽象",
+              "details": [
+                "LLMClient 接口定义",
+                "chat(context, config) 方法",
+                "错误处理和重试机制"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "DashScope 客户端",
+              "details": [
+                "支持阿里云百炼 API",
+                "支持 qwen/glm/kimi 等模型",
+                "流式响应支持（可选）"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "模型配置",
+              "details": [
+                "config/models.json - 模型定义",
+                "模型能力描述（maxTokens, vision 等）",
+                "运行时动态切换模型"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以调用 DashScope API",
+            "支持多个模型",
+            "Agent 实例可以使用不同模型"
+          ]
+        },
+        {
+          "id": "P1-S005",
+          "title": "并行模式实现",
+          "description": "实现 @mention 触发的并行响应模式",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "消息解析",
+              "details": [
+                "parseMentions(content) - 解析 @agent",
+                "mention 格式: @agentId",
+                "支持多个 mention"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "并行路由",
+              "details": [
+                "被 @ 的 Agent 分别响应",
+                "无 @ 时发送给默认 Agent",
+                "响应并行发送"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "递归防护",
+              "details": [
+                "最大递归深度限制 (default: 3)",
+                "Agent 不能 @ 自己",
+                "循环检测和中断"
+              ]
+            }
+          ],
+          "acceptance": [
+            "@agent1 @agent2 触发两个 Agent 分别响应",
+            "无 @ 时默认 Agent 响应",
+            "不会出现无限递归"
+          ]
+        },
+        {
+          "id": "P1-S006",
+          "title": "团队模式实现",
+          "description": "实现 Team Leader 协调的团队协作模式",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "Leader 角色",
+              "details": [
+                "房间创建时指定 Leader Agent",
+                "Leader 看到所有对话",
+                "Leader 负责任务分配和汇总"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "广播与定向",
+              "details": [
+                "无接收人时广播给所有成员",
+                "@指定时只发给指定 Agent",
+                "Leader 可以 @ 多个成员分配任务"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "消息过滤",
+              "details": [
+                "Agent 只看到 @ 给他的消息",
+                "Leader 看到所有消息",
+                "系统消息广播给所有人"
+              ]
+            }
+          ],
+          "acceptance": [
+            "Leader 可以看到所有对话",
+            "可以协调成员工作",
+            "普通成员只看到 @ 自己的消息"
+          ]
+        },
+        {
+          "id": "P1-S007",
+          "title": "基础工具系统",
+          "description": "实现内置工具和工具调用机制",
+          "status": "pending",
+          "priority": "medium",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "Tool 抽象",
+              "details": [
+                "Tool 接口定义",
+                "ToolRegistry 注册中心",
+                "工具白名单过滤"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "File 工具",
+              "details": [
+                "read_file(path) - 读取文件",
+                "write_file(path, content) - 写入文件",
+                "list_dir(path) - 列出目录",
+                "工作目录限制（安全）"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "Web 工具",
+              "details": [
+                "web_fetch(url) - 获取网页内容",
+                "web_search(query) - 搜索互联网",
+                "超时和错误处理"
+              ]
+            }
+          ],
+          "acceptance": [
+            "Agent 可以调用 file 工具读写文件",
+            "Agent 可以调用 web 工具获取网络内容",
+            "工具调用结果正确返回"
+          ]
+        },
+        {
+          "id": "P1-S008",
+          "title": "Web 渠道重构",
+          "description": "重构现有 Web 界面支持新的架构",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "后端适配",
+              "details": [
+                "WebSocket 消息格式更新",
+                "Room API 接口",
+                "Agent 配置 API"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "前端聊天室",
+              "details": [
+                "房间列表和切换",
+                "协作模式显示",
+                "Agent 实例列表"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "Agent 管理 UI",
+              "details": [
+                "添加 Agent 到房间",
+                "配置 Agent 模型",
+                "编辑人格设定（可选）"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以创建房间并选择协作模式",
+            "可以添加 Agent 实例到房间",
+            "可以在房间内进行多 Agent 对话"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "记忆与持久化",
+      "description": "记忆系统 + Pipeline模式 + 状态持久化",
+      "duration": "2 weeks",
+      "stories": [
+        {
+          "id": "P2-S001",
+          "title": "短期记忆实现",
+          "description": "实现会话级别的上下文记忆",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "MemoryStore 实现",
+              "details": [
+                "addShortTerm(message) - 添加短期记忆",
+                "getShortTerm() - 获取短期记忆",
+                "clear() - 清除记忆"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "上下文构建",
+              "details": [
+                "从记忆构建 ChatContext",
+                "消息角色映射 (user/assistant)",
+                "上下文窗口限制"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "记忆压缩",
+              "details": [
+                "超过 N 条消息时压缩",
+                "生成摘要替换旧消息",
+                "保留关键信息"
+              ]
+            }
+          ],
+          "acceptance": [
+            "Agent 可以记住对话历史",
+            "超长对话会被自动压缩",
+            "上下文构建正确"
+          ]
+        },
+        {
+          "id": "P2-S002",
+          "title": "结构化长期记忆",
+          "description": "实现持久化的长期记忆存储",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "LongTermMemory 类型",
+              "details": [
+                "type: summary | fact | preference",
+                "content: 记忆内容",
+                "tags: 标签分类",
+                "timestamp: 时间戳"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "记忆持久化",
+              "details": [
+                "SQLite 存储长期记忆",
+                "按 Agent 实例 ID 索引",
+                "支持增删改查"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "记忆检索",
+              "details": [
+                "按类型过滤",
+                "按标签搜索",
+                "按时间范围查询"
+              ]
+            }
+          ],
+          "acceptance": [
+            "长期记忆持久化到 SQLite",
+            "重启后记忆不丢失",
+            "可以检索历史记忆"
+          ]
+        },
+        {
+          "id": "P2-S003",
+          "title": "Pipeline 模式实现",
+          "description": "实现任务流水线流转模式",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "流水线定义",
+              "details": [
+                "PipelineStage 接口",
+                "定义阶段顺序",
+                "每个阶段关联一个 Agent"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "任务流转",
+              "details": [
+                "当前阶段完成后自动流转",
+                "传递上一阶段的输出",
+                "异常处理和回退"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "状态追踪",
+              "details": [
+                "记录当前阶段",
+                "每个阶段的输出",
+                "总体进度"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以定义多阶段流水线",
+            "任务按顺序流转",
+            "每个 Agent 只处理自己阶段"
+          ]
+        },
+        {
+          "id": "P2-S004",
+          "title": "状态持久化",
+          "description": "实现 Room 和 Agent 状态的持久化",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "SQLite Schema",
+              "details": [
+                "rooms 表 - 房间信息",
+                "agent_instances 表 - 实例信息",
+                "messages 表 - 消息历史",
+                "memory 表 - 记忆存储"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "自动保存",
+              "details": [
+                "消息自动保存",
+                "状态变更自动保存",
+                "定期快照"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "恢复机制",
+              "details": [
+                "启动时恢复房间",
+                "恢复 Agent 实例",
+                "恢复对话上下文"
+              ]
+            }
+          ],
+          "acceptance": [
+            "服务重启后状态恢复",
+            "消息历史不丢失",
+            "Agent 实例状态恢复"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "高级功能",
+      "description": "其他模式 + 多渠道 + 高级功能",
+      "duration": "2 weeks",
+      "stories": [
+        {
+          "id": "P3-S001",
+          "title": "决策模式实现",
+          "description": "实现多 Agent 投票/辩论决策",
+          "status": "pending",
+          "priority": "medium",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "投票机制",
+              "details": [
+                "每个 Agent 投票",
+                "统计投票结果",
+                "决策规则（多数/一致）"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "辩论机制",
+              "details": [
+                "Agent 提出观点",
+                "其他 Agent 反驳/支持",
+                "综合得出结论"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以发起投票决策",
+            "投票结果正确统计",
+            "辩论流程正常运作"
+          ]
+        },
+        {
+          "id": "P3-S002",
+          "title": "Ralph Loop 模式",
+          "description": "实现自主循环执行模式",
+          "status": "pending",
+          "priority": "medium",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "任务列表管理",
+              "details": [
+                "从 PRD 解析任务",
+                "任务状态追踪",
+                "任务优先级"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "循环执行",
+              "details": [
+                "选择下一个任务",
+                "调用 Agent 执行",
+                "检查完成状态",
+                "循环直到完成"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "安全限制",
+              "details": [
+                "最大循环次数",
+                "单次执行超时",
+                "人工确认点"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以导入任务列表",
+            "自动执行直到完成",
+            "有安全限制"
+          ]
+        },
+        {
+          "id": "P3-S003",
+          "title": "飞书渠道集成",
+          "description": "实现飞书消息平台集成",
+          "status": "pending",
+          "priority": "high",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "飞书 SDK 集成",
+              "details": [
+                "@larksuiteoapi/node-sdk",
+                "事件订阅配置",
+                "消息接收处理"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "消息映射",
+              "details": [
+                "飞书群 → Room 映射",
+                "用户 ID 映射",
+                "消息格式转换"
+              ]
+            },
+            {
+              "id": "T003",
+              "title": "多模态支持",
+              "details": [
+                "文本消息",
+                "图片消息",
+                "文件消息",
+                "语音消息（可选）"
+              ]
+            }
+          ],
+          "acceptance": [
+            "飞书群可以与 MyClaw 交互",
+            "消息双向同步",
+            "支持多模态消息"
+          ]
+        },
+        {
+          "id": "P3-S004",
+          "title": "TUI 渠道实现",
+          "description": "实现终端用户界面",
+          "status": "pending",
+          "priority": "medium",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "TUI 框架",
+              "details": [
+                "选择框架 (Ink / blessed)",
+                "基本布局",
+                "键盘交互"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "聊天界面",
+              "details": [
+                "消息列表显示",
+                "输入框",
+                "Agent 状态显示"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以在终端使用 MyClaw",
+            "基本聊天功能正常"
+          ]
+        },
+        {
+          "id": "P3-S005",
+          "title": "插件系统",
+          "description": "实现可扩展的插件机制",
+          "status": "pending",
+          "priority": "medium",
+          "tasks": [
+            {
+              "id": "T001",
+              "title": "插件接口",
+              "details": [
+                "ToolPlugin 接口",
+                "ChannelPlugin 接口",
+                "生命周期钩子"
+              ]
+            },
+            {
+              "id": "T002",
+              "title": "插件加载",
+              "details": [
+                "从目录加载插件",
+                "插件依赖管理",
+                "热加载（可选）"
+              ]
+            }
+          ],
+          "acceptance": [
+            "可以通过插件扩展工具",
+            "可以通过插件扩展渠道"
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "createdAt": "2025-03-26",
+    "updatedAt": "2025-03-26",
+    "status": {
+      "phase-1": "pending",
+      "phase-2": "pending",
+      "phase-3": "pending"
+    },
+    "progress": {
+      "totalStories": 17,
+      "completedStories": 0,
+      "inProgressStories": 0,
+      "pendingStories": 17
+    }
+  }
+}

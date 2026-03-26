@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyClaw - 个人助手</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <header class="sidebar-header">
+        <h1>🦞 MyClaw</h1>
+        <p>个人 AI 助手</p>
+      </header>
+      
+      <section class="config-section">
+        <h2>模型配置</h2>
+        <div class="config-form">
+          <label>
+            <span>API Key</span>
+            <input type="password" id="api-key-input" placeholder="输入 API Key...">
+          </label>
+          <button id="save-config-btn">保存配置</button>
+          <div class="config-status" id="config-status"></div>
+        </div>
+      </section>
+      
+      <section class="agents-section">
+        <h2>可用机器人</h2>
+        <div id="agent-list" class="agent-list"></div>
+      </section>
+      
+      <section class="room-agents-section">
+        <h2>当前房间机器人</h2>
+        <div id="room-agents" class="room-agents"></div>
+      </section>
+    </aside>
+    
+    <main class="chat-area">
+      <header class="chat-header">
+        <h2 id="room-name">大厅</h2>
+        <span class="connection-status" id="connection-status">连接中...</span>
+      </header>
+      
+      <div class="messages" id="messages"></div>
+      
+      <form class="input-area" id="input-form">
+        <div class="mention-hint" id="mention-hint"></div>
+        <div class="input-row">
+          <input 
+            type="text" 
+            id="message-input" 
+            placeholder="输入消息，使用 @机器人名 呼叫特定机器人..."
+            autocomplete="off"
+          >
+          <button type="submit">发送</button>
+        </div>
+      </form>
+    </main>
+  </div>
+  
+  <!-- Agent Config Modal -->
+  <div class="modal" id="agent-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-agent-name">配置机器人</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>名称</label>
+          <input type="text" id="modal-agent-name-input">
+        </div>
+        <div class="form-group">
+          <label>模型</label>
+          <select id="modal-agent-model"></select>
+        </div>
+        <div class="form-group">
+          <label>人格设定</label>
+          <textarea id="modal-agent-prompt" rows="4"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel">取消</button>
+        <button class="btn-primary" id="modal-save">保存</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="app.js"></script>
+</body>
+</html>
