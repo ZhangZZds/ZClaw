@@ -7,6 +7,8 @@ class MyClawApp {
     this.roomAgents = [];
     this.currentRoomId = 'lobby';
     this.currentEditAgent = null;
+    this.rooms = [];
+    this.currentRoomMode = 'parallel';
     
     this.elements = {
       agentList: document.getElementById('agent-list'),
@@ -17,9 +19,14 @@ class MyClawApp {
       connectionStatus: document.getElementById('connection-status'),
       mentionHint: document.getElementById('mention-hint'),
       roomName: document.getElementById('room-name'),
+      roomModeBadge: document.getElementById('room-mode-badge'),
       apiKeyInput: document.getElementById('api-key-input'),
       saveConfigBtn: document.getElementById('save-config-btn'),
       configStatus: document.getElementById('config-status'),
+      roomList: document.getElementById('room-list'),
+      newRoomName: document.getElementById('new-room-name'),
+      roomModeSelect: document.getElementById('room-mode-select'),
+      createRoomBtn: document.getElementById('create-room-btn'),
       modal: document.getElementById('agent-modal'),
       modalAgentName: document.getElementById('modal-agent-name'),
       modalAgentNameInput: document.getElementById('modal-agent-name-input'),
@@ -68,7 +75,9 @@ class MyClawApp {
       case 'init':
         this.agents = data.payload.agents;
         this.models = data.payload.models || [];
+        this.rooms = data.payload.rooms || [];
         this.renderAgentList();
+        this.renderRoomList();
         
         if (data.payload.modelConfig) {
           if (data.payload.modelConfig.hasApiKey) {
@@ -80,9 +89,11 @@ class MyClawApp {
           }
         }
         
-        const room = data.payload.rooms[0];
+        const room = data.payload.rooms?.find(r => r.id === this.currentRoomId) || data.payload.rooms?.[0];
         if (room) {
           this.roomAgents = room.agents;
+          this.currentRoomMode = room.collaborationMode || 'parallel';
+          this.updateRoomModeBadge();
           this.renderRoomAgents();
         }
         break;
@@ -98,9 +109,13 @@ class MyClawApp {
         break;
         
       case 'room_list':
-        const rooms = data.payload;
-        if (rooms.length > 0) {
-          this.roomAgents = rooms[0].agents;
+        this.rooms = data.payload;
+        this.renderRoomList();
+        const currentRoom = this.rooms.find(r => r.id === this.currentRoomId);
+        if (currentRoom) {
+          this.roomAgents = currentRoom.agents;
+          this.currentRoomMode = currentRoom.collaborationMode || 'parallel';
+          this.updateRoomModeBadge();
           this.renderRoomAgents();
         }
         break;
@@ -138,6 +153,30 @@ class MyClawApp {
         this.closeModal();
       }
     });
+    
+    this.elements.createRoomBtn.addEventListener('click', () => {
+      this.createRoom();
+    });
+  }
+  
+  createRoom() {
+    const name = this.elements.newRoomName.value.trim();
+    const collaborationMode = this.elements.roomModeSelect.value;
+    
+    if (!name) {
+      alert('请输入房间名称');
+      return;
+    }
+    
+    this.ws.send(JSON.stringify({
+      type: 'room_create',
+      payload: {
+        name,
+        collaborationMode,
+      },
+    }));
+    
+    this.elements.newRoomName.value = '';
   }
   
   renderAgentList() {
@@ -186,6 +225,62 @@ class MyClawApp {
       : '<p style="color: var(--text-muted); font-size: 14px;">暂无机器人，请从上方添加</p>';
     
     this.renderAgentList();
+  }
+  
+  renderRoomList() {
+    this.elements.roomList.innerHTML = this.rooms.map(room => {
+      const modeLabels = {
+        parallel: '并行模式',
+        team: '团队模式',
+        decision: '决策模式',
+        pipeline: '流水线模式',
+        'ralph-loop': '自主循环模式',
+      };
+      
+      return `
+        <div class="room-item ${room.id === this.currentRoomId ? 'active' : ''}" data-room-id="${room.id}">
+          <div class="room-info" onclick="app.switchRoom('${room.id}')">
+            <span class="room-name">${room.name}</span>
+            <span class="room-mode">${modeLabels[room.collaborationMode] || '并行模式'}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  updateRoomModeBadge() {
+    const modeLabels = {
+      parallel: '并行模式',
+      team: '团队模式',
+      decision: '决策模式',
+      pipeline: '流水线模式',
+      'ralph-loop': '自主循环模式',
+    };
+    
+    this.elements.roomModeBadge.textContent = modeLabels[this.currentRoomMode] || '并行模式';
+  }
+  
+  switchRoom(roomId) {
+    this.currentRoomId = roomId;
+    const room = this.rooms.find(r => r.id === roomId);
+    if (room) {
+      this.roomAgents = room.agents;
+      this.currentRoomMode = room.collaborationMode || 'parallel';
+      this.updateRoomModeBadge();
+      this.elements.roomName.textContent = room.name;
+      this.renderRoomAgents();
+      this.renderRoomList();
+      this.loadRoomMessages();
+    }
+  }
+  
+  loadRoomMessages() {
+    fetch(`/api/rooms/${this.currentRoomId}/messages`)
+      .then(res => res.json())
+      .then(messages => {
+        this.elements.messages.innerHTML = '';
+        messages.forEach(msg => this.appendMessage(msg));
+      });
   }
   
   openAgentConfig(agentId) {

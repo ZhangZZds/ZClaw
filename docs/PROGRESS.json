@@ -29,9 +29,9 @@
       "id": "phase-3",
       "name": "高级功能",
       "stories": [
-        { "id": "P3-S001", "title": "决策模式实现", "status": "pending", "priority": "medium" },
+        { "id": "P3-S001", "title": "决策模式实现", "status": "done", "priority": "medium" },
         { "id": "P3-S002", "title": "Ralph Loop 模式", "status": "pending", "priority": "medium" },
-        { "id": "P3-S003", "title": "飞书渠道集成", "status": "pending", "priority": "high" },
+        { "id": "P3-S003", "title": "飞书渠道集成", "status": "done", "priority": "high" },
         { "id": "P3-S004", "title": "TUI 渠道实现", "status": "pending", "priority": "medium" },
         { "id": "P3-S005", "title": "插件系统", "status": "pending", "priority": "medium" }
       ]
@@ -40,9 +40,9 @@
   "bugs": [],
   "status": {
     "totalStories": 17,
-    "completed": 12,
+    "completed": 14,
     "inProgress": 0,
-    "pending": 5,
+    "pending": 3,
     "totalBugs": 0,
     "openBugs": 0,
     "fixedBugs": 0

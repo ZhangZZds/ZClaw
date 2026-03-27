@@ -31,8 +31,27 @@
         <div id="agent-list" class="agent-list"></div>
       </section>
       
+      <section class="rooms-section">
+        <h2>房间列表</h2>
+        <div class="room-controls">
+          <input type="text" id="new-room-name" placeholder="新房间名称...">
+          <select id="room-mode-select">
+            <option value="parallel">并行模式</option>
+            <option value="team">团队模式</option>
+            <option value="decision">决策模式</option>
+            <option value="pipeline">流水线模式</option>
+            <option value="ralph-loop">自主循环模式</option>
+          </select>
+          <button id="create-room-btn">创建</button>
+        </div>
+        <div id="room-list" class="room-list"></div>
+      </section>
+      
       <section class="room-agents-section">
         <h2>当前房间机器人</h2>
+        <div class="room-info">
+          <span id="room-mode-badge" class="mode-badge">并行模式</span>
+        </div>
         <div id="room-agents" class="room-agents"></div>
       </section>
     </aside>

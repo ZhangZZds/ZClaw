@@ -19,6 +19,7 @@ export class RoomManager {
       agents: ['assistant'],
       messages: [],
       createdAt: Date.now(),
+      collaborationMode: 'parallel',
     };
     
     this.state.rooms.set(defaultRoom.id, defaultRoom);
@@ -36,13 +37,14 @@ export class RoomManager {
     defaultRoom.messages.push(welcomeMessage);
   }
   
-  createRoom(name: string): Room {
+  createRoom(name: string, collaborationMode: 'parallel' | 'team' | 'pipeline' | 'decision' | 'ralph-loop' = 'parallel'): Room {
     const room: Room = {
       id: uuid(),
       name,
       agents: [],
       messages: [],
       createdAt: Date.now(),
+      collaborationMode,
     };
     
     this.state.rooms.set(room.id, room);

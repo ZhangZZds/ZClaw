@@ -5,11 +5,13 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuid } from 'uuid';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import type { AppState, Message, WSMessage, ChatPayload, AgentAddPayload, AgentUpdatePayload, ModelConfigPayload } from './types.js';
+import type { AppState, Message, WSMessage, ChatPayload, AgentAddPayload, AgentUpdatePayload, ModelConfigPayload, CollaborationMode } from './types.js';
 import { AVAILABLE_MODELS } from './types.js';
 import { createLLMClient } from './llm.js';
 import { AgentManager } from './agent-manager.js';
 import { RoomManager } from './room-manager.js';
+import { ChannelManager } from './channel-manager.js';
+import { FeishuChannel } from '../channels/feishu/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,6 +65,30 @@ function broadcastAgentUpdate(): void {
 const llmClient = createLLMClient(modelConfig);
 const agentManager = new AgentManager(state, llmClient, broadcast);
 const roomManager = new RoomManager(state, broadcast);
+const channelManager = new ChannelManager();
+
+// Setup channels
+async function setupChannels(): Promise<void> {
+  const feishuConfig = {
+    appId: process.env.FEISHU_APP_ID || '',
+    appSecret: process.env.FEISHU_APP_SECRET || '',
+    verificationToken: process.env.FEISHU_VERIFICATION_TOKEN,
+    encryptKey: process.env.FEISHU_ENCRYPT_KEY,
+  };
+
+  if (feishuConfig.appId && feishuConfig.appSecret) {
+    const feishuChannel = new FeishuChannel(feishuConfig);
+    channelManager.registerChannel(feishuChannel);
+    
+    // Handle incoming messages from Feishu
+    channelManager.onMessage(async (message) => {
+      const roomId = feishuChannel.getRoomId(message.channelId);
+      if (roomId) {
+        await agentManager.processUserMessage(roomId, message.from, message.content);
+      }
+    });
+  }
+}
 
 const frontendPath = join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
@@ -119,7 +145,19 @@ app.get('/api/rooms', (req, res) => {
     name: room.name,
     agents: room.agents,
     messageCount: room.messages.length,
+    collaborationMode: room.collaborationMode,
   })));
+});
+
+app.post('/api/rooms', (req, res) => {
+  const { name, collaborationMode } = req.body as { name: string; collaborationMode?: CollaborationMode };
+  const room = roomManager.createRoom(name, collaborationMode || 'parallel');
+  res.json({
+    id: room.id,
+    name: room.name,
+    agents: room.agents,
+    collaborationMode: room.collaborationMode,
+  });
 });
 
 app.get('/api/rooms/:roomId/messages', (req, res) => {
@@ -227,6 +265,22 @@ wss.on('connection', (ws) => {
               id: r.id,
               name: r.name,
               agents: r.agents,
+              collaborationMode: r.collaborationMode,
+            })),
+          }));
+          break;
+        }
+        
+        case 'room_create': {
+          const payload = msg.payload as { name: string; collaborationMode?: CollaborationMode };
+          const room = roomManager.createRoom(payload.name, payload.collaborationMode || 'parallel');
+          ws.send(JSON.stringify({
+            type: 'room_list',
+            payload: roomManager.getAllRooms().map(r => ({
+              id: r.id,
+              name: r.name,
+              agents: r.agents,
+              collaborationMode: r.collaborationMode,
             })),
           }));
           break;
@@ -245,8 +299,17 @@ wss.on('connection', (ws) => {
 
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
-  console.log(`MyClaw server running at http://localhost:${PORT}`);
-  console.log('Available agents:', agentManager.getAllAgents().map(a => `${a.name}(${a.model})`).join(', '));
-  console.log('Model config:', state.modelConfig.apiKey ? 'API Key configured' : 'Using mock mode');
-});
+async function startServer(): Promise<void> {
+  await setupChannels();
+  
+  server.listen(PORT, () => {
+    console.log(`MyClaw server running at http://localhost:${PORT}`);
+    console.log('Available agents:', agentManager.getAllAgents().map(a => `${a.name}(${a.model})`).join(', '));
+    console.log('Model config:', state.modelConfig.apiKey ? 'API Key configured' : 'Using mock mode');
+    
+    // Start all channels
+    channelManager.startAllChannels();
+  });
+}
+
+startServer();

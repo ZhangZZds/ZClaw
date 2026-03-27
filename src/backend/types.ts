@@ -39,12 +39,15 @@ export interface Message {
   type: 'text' | 'system';
 }
 
+export type CollaborationMode = 'parallel' | 'team' | 'pipeline' | 'decision' | 'ralph-loop';
+
 export interface Room {
   id: string;
   name: string;
   agents: string[];
   messages: Message[];
   createdAt: number;
+  collaborationMode: CollaborationMode;
 }
 
 export interface ChatContext {
@@ -66,7 +69,7 @@ export interface AppState {
 }
 
 export interface WSMessage {
-  type: 'join' | 'leave' | 'chat' | 'agent_add' | 'agent_remove' | 'agent_list' | 'room_list' | 'model_config' | 'agent_update';
+  type: 'join' | 'leave' | 'chat' | 'agent_add' | 'agent_remove' | 'agent_list' | 'room_list' | 'room_create' | 'model_config' | 'agent_update';
   payload: unknown;
 }
 

@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "appId": "${FEISHU_APP_ID}",
+  "appSecret": "${FEISHU_APP_SECRET}",
+  "debug": false,
+  "roomMappings": {}
+}

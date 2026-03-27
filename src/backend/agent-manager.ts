@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import type { Agent, AppState, Room, Message, ChatContext, LLMConfig, AgentUpdatePayload } from './types.js';
+import type { Agent, AppState, Room, Message, ChatContext, LLMConfig, AgentUpdatePayload, CollaborationMode } from './types.js';
 import type { LLMClient } from './llm.js';
 
 const DEFAULT_MODELS: Record<string, string> = {
@@ -144,6 +144,32 @@ export class AgentManager {
     this.onMessage(userMessage);
     
     const mentions = mentionAgentIds || this.parseMentions(content);
+    
+    let responses: Message[] = [];
+    
+    switch (room.collaborationMode) {
+      case 'decision':
+        responses = await this.processDecisionMode(roomId, room, userId, content, mentions);
+        break;
+      case 'team':
+        responses = await this.processTeamMode(roomId, room, userId, content, mentions);
+        break;
+      case 'parallel':
+      default:
+        responses = await this.processParallelMode(roomId, room, userId, content, mentions);
+        break;
+    }
+    
+    return responses;
+  }
+  
+  async processParallelMode(
+    roomId: string,
+    room: Room,
+    userId: string,
+    content: string,
+    mentions: string[]
+  ): Promise<Message[]> {
     const targetAgents = mentions.length > 0
       ? mentions.map(id => this.state.agents.get(id)).filter(Boolean) as Agent[]
       : [this.state.agents.get('assistant')!];
@@ -156,6 +182,80 @@ export class AgentManager {
     }
     
     return responses;
+  }
+  
+  async processTeamMode(
+    roomId: string,
+    room: Room,
+    userId: string,
+    content: string,
+    mentions: string[]
+  ): Promise<Message[]> {
+    const targetAgents = mentions.length > 0
+      ? mentions.map(id => this.state.agents.get(id)).filter(Boolean) as Agent[]
+      : this.state.agents.get('assistant') ? [this.state.agents.get('assistant')!] : [];
+    
+    const responses: Message[] = [];
+    
+    for (const agent of targetAgents) {
+      const response = await this.generateAgentResponse(roomId, agent, content, userId);
+      responses.push(response);
+    }
+    
+    return responses;
+  }
+  
+  async processDecisionMode(
+    roomId: string,
+    room: Room,
+    userId: string,
+    content: string,
+    mentions: string[]
+  ): Promise<Message[]> {
+    const targetAgents = mentions.length > 0
+      ? mentions.map(id => this.state.agents.get(id)).filter(Boolean) as Agent[]
+      : Array.from(this.state.agents.values()).filter(a => a.isActive);
+    
+    if (targetAgents.length === 0) {
+      return [];
+    }
+    
+    const votingPromises = targetAgents.map(async (agent) => {
+      const votingPrompt = `请对以下问题给出你的判断和分析：
+
+${content}
+
+请给出你的观点（支持/反对/中立），并说明理由。`;
+      
+      return await this.generateAgentResponse(roomId, agent, votingPrompt, userId);
+    });
+    
+    const votes = await Promise.all(votingPromises);
+    
+    const summaryPrompt = `以下是多个 Agent 对同一问题的观点：
+
+${votes.map((v, i) => `Agent ${i + 1}: ${v.content}`).join('\n\n')}
+
+请综合以上所有观点，给出一个综合结论和最终建议。`;
+    
+    const summaryAgent = this.state.agents.get('assistant') || targetAgents[0];
+    const summaryMessage = await this.generateAgentResponse(roomId, summaryAgent, summaryPrompt, 'system');
+    
+    const decisionSummary: Message = {
+      id: uuid(),
+      roomId,
+      from: 'system',
+      to: 'all',
+      content: `📊 决策模式结论：
+${summaryMessage.content}`,
+      timestamp: Date.now(),
+      type: 'system',
+    };
+    
+    room.messages.push(decisionSummary);
+    this.onMessage(decisionSummary);
+    
+    return [...votes, decisionSummary];
   }
   
   async generateAgentResponse(
